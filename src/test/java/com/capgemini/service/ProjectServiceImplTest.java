@@ -204,16 +204,25 @@ public class ProjectServiceImplTest {
 	@Test
 	public void shouldCountNumberOfProjectsWithMoreThan10Employees() {
 		// given when
-		int counter = employeeProjectDao.countProjectsWithEmployeesMoreThan(10L);
+		int counter = employeeProjectDao.countProjectsWithEmployeesMoreThan(10L, new Date(1454281200000L));
 		
 		// then
 		Assert.assertEquals(1, counter);
 	}
 	
 	@Test
+	public void shouldCountNumberAndReturnZeroProjectsWithMoreThan10EmployeesWhenNoProjectsAtGivenTime() {
+		// given when
+		int counter = employeeProjectDao.countProjectsWithEmployeesMoreThan(10L, new Date(1L));
+		
+		// then
+		Assert.assertEquals(0, counter);
+	}
+	
+	@Test
 	public void shouldCountNumberOfProjectsWithMoreThan0Employees() {
 		// given when
-		int counter = employeeProjectDao.countProjectsWithEmployeesMoreThan(0L);
+		int counter = employeeProjectDao.countProjectsWithEmployeesMoreThan(0L, new Date(1454281200000L));
 		
 		// then
 		Assert.assertEquals(4, counter);
@@ -222,19 +231,54 @@ public class ProjectServiceImplTest {
 	@Test
 	public void shouldFindProjectsWithMoreThan10Employees() {
 		// given when
-		List<ProjectEntity> projectsFound = employeeProjectDao.findProjectsWithEmployeesMoreThan(10L);
+		List<ProjectEntity> projectsFound = employeeProjectDao.findProjectsWithEmployeesMoreThan(10L, new Date(1454281200000L));
 				
 		// then
 		Assert.assertEquals(1, projectsFound.size());
 	}
 	
 	@Test
+	public void shouldNotFindProjectsWithMoreThan10EmployeesWhenNoProjectsAtGivenTime() {
+		// given when
+		List<ProjectEntity> projectsFound = employeeProjectDao.findProjectsWithEmployeesMoreThan(10L, new Date(1L));
+				
+		// then
+		Assert.assertEquals(0, projectsFound.size());
+	}
+	
+	@Test
 	public void shouldFindProjectsWithMoreThan0Employees() {
 		// given when
-		List<ProjectEntity> projectsFound = employeeProjectDao.findProjectsWithEmployeesMoreThan(0L);
+		List<ProjectEntity> projectsFound = employeeProjectDao.findProjectsWithEmployeesMoreThan(0L, new Date(1454281200000L));
 				
 		// then
 		Assert.assertEquals(4, projectsFound.size());
+	}
+	
+	@Test
+	public void shouldFindEmployeesThatWereInProjectForMoreThan_N_Months() {
+		// given
+		double n = 3D;
+		ProjectEntity project = dao.findOne(3L);
+		
+		// when
+		List<EmployeeEntity> foundProjects = employeeProjectDao.findEmployeesWorkingInProjectMoreThan(n, project);
+		
+		// then
+		Assert.assertEquals(12, foundProjects.size());
+	}
+	
+	@Test
+	public void shouldNotFindEmployeesThatWereInProjectForMoreThan_50_Months() {
+		// given
+		double n = 50D;
+		ProjectEntity project = dao.findOne(3L);
+		
+		// when
+		List<EmployeeEntity> foundProjects = employeeProjectDao.findEmployeesWorkingInProjectMoreThan(n, project);
+		
+		// then
+		Assert.assertEquals(0, foundProjects.size());
 	}
 	
 	private ProjectEntity giveProject() {
