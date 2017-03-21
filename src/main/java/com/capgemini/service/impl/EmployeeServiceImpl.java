@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import com.capgemini.dao.impl.EmployeeDao;
 import com.capgemini.domain.DepartmentEntity;
 import com.capgemini.domain.EmployeeEntity;
+import com.capgemini.exception.ManagerDeletionException;
 import com.capgemini.service.EmployeeService;
+import com.capgemini.service.ProjectService;
 
 @Transactional
 @Service
@@ -18,6 +20,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 	
 	@Autowired
 	private EmployeeDao employeeDao;
+	
+	@Autowired
+	private ProjectService projectService;
 
 	@Override
 	public EmployeeEntity findById(Long id) {
@@ -36,10 +41,15 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Override
 	public void delete(EmployeeEntity employee) {
-		employeeDao.delete(employee);
+		if (projectService.isManager(employee)) {
+			throw new ManagerDeletionException("Deletion of manager is forbidden.");
+		}
+		else {
+			employeeDao.delete(employee);
+		}
 	}
 
-	@Override //TODO osobny serwis na podlaczanie department?
+	@Override
 	public EmployeeEntity add(EmployeeEntity employee, DepartmentEntity department) {
 		employee.setDepartment(department);
 		return employeeDao.save(employee);
@@ -53,7 +63,22 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Override
 	public void update(EmployeeEntity employee) {
-		employeeDao.update(employee.getId(), employee.getName(), employee.getSurname(), employee.getBirthdate(), employee.getPesel());
+		EmployeeEntity foundEmployee = employeeDao.findOne(employee.getId());
+		foundEmployee.setName(employee.getName());
+		foundEmployee.setSurname(employee.getSurname());
+		foundEmployee.setBirthdate(employee.getBirthdate());
+		foundEmployee.setPesel(employee.getPesel());
+	}
+
+	@Override
+	public List<EmployeeEntity> findByNameAndSurname(String name, String surname) {
+		if (name == null || name.isEmpty()) {
+			return employeeDao.findBySurnameContaining(surname);
+		}
+		else if (surname == null || surname.isEmpty()) {
+			return employeeDao.findByNameContaining(name);
+		}
+		return employeeDao.findByNameContainingAndSurnameContaining(name, surname);
 	}
 	
 

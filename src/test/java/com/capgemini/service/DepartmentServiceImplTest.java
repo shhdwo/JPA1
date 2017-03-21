@@ -1,7 +1,5 @@
 package com.capgemini.service;
 
-import java.util.List;
-
 import javax.transaction.Transactional;
 
 import org.junit.Assert;
@@ -11,73 +9,107 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.capgemini.dao.impl.DepartmentDao;
 import com.capgemini.domain.DepartmentEntity;
-import com.capgemini.domain.EmployeeEntity;
+import com.capgemini.exception.DepartmentContainEmployeesException;
+import com.capgemini.exception.DepartmentIdAlreadyExistsException;
 
 @Transactional
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class DepartmentServiceTest {
+public class DepartmentServiceImplTest {
 	
 	@Autowired
 	private DepartmentService service;
+	
+	@Autowired
+	private DepartmentDao dao;
 	
 	@Autowired
 	private EmployeeService EmployeeService;
 	
 	@Test
 	public void shouldFindDepartmentById() {
-		// given
+		// given		
 		final long departmentId = 1L;
-		// when
+		
+		// when		
 		DepartmentEntity department = service.findById(departmentId);
-		// then
+		
+		// then	
 		Assert.assertEquals("Finance", department.getName());
 	}
 	
 	@Test
 	public void shouldDeleteDepartment() {
-		// given
-		DepartmentEntity department = service.findById(1L);
-		List<EmployeeEntity> employeesInDepartment = EmployeeService.findByDepartment(department);
+		// given	
+		DepartmentEntity department = service.findById(3L);
 		int sizeBefore = service.findAll().size();
 		int employeeSizeBefore = EmployeeService.findAll().size();
-		// when
+		
+		// when		
 		service.delete(department);
 		int sizeAfter = service.findAll().size();
 		int employeeSizeAfter = EmployeeService.findAll().size();
-		// then
+		
+		// then		
 		Assert.assertEquals(sizeBefore - 1, sizeAfter);
 		Assert.assertEquals(employeeSizeBefore, employeeSizeAfter);
-		Assert.assertNull(employeesInDepartment.get(0).getDepartment());
+	}
+	
+	@Test(expected = DepartmentContainEmployeesException.class)
+	public void shouldThrowExceptionWhenDeleteDepartmentWithEmployees() {
+		// given	
+		DepartmentEntity department = service.findById(1L);
+		
+		// when	
+		service.delete(department);
 	}
 	
 	@Test
 	public void shouldSaveDepartment() {
-		// given
+		// given		
+		int departmentsActualSize = service.findAll().size();
 		DepartmentEntity department = new DepartmentEntity();
 		department.setName("Entertainment");
-		// when
+		
+		// when	
 		service.add(department);
-		DepartmentEntity foundDepartmentById = service.findById(3L);
-		// then
+		DepartmentEntity foundDepartmentById = service.findById(departmentsActualSize + 1L);
+		
+		// then	
 		Assert.assertEquals(department.getName(), foundDepartmentById.getName());
-		Assert.assertEquals(new Long(3), foundDepartmentById.getId());
+		Assert.assertEquals(new Long(departmentsActualSize + 1L), foundDepartmentById.getId());
 		Assert.assertEquals(1, foundDepartmentById.getVersion());
+	}
+	
+	@Test(expected = DepartmentIdAlreadyExistsException.class)
+	public void shouldThrowExceptionWhenSaveDepartmentWithExistingId() {
+		// given	
+		DepartmentEntity department = new DepartmentEntity();
+		department.setName("Entertainment");
+		department.setId(1L);
+		
+		// when	
+		service.add(department);
 	}
 	
 	@Test
 	public void shouldUpdateDepartmentName() {
-		// given
+		// given	
 		final long departmentId = 1L;
 		DepartmentEntity department = service.findById(departmentId);
+		int version = department.getVersion();
 		department.setName("Health");
-		// when
+		
+		// when	
 		service.updateName(department);
+		dao.flush();
 		DepartmentEntity updatedDepartment = service.findById(departmentId);
-		// then
+		
+		// then	
 		Assert.assertEquals(department.getName(), updatedDepartment.getName());
-		Assert.assertEquals(2, updatedDepartment.getVersion());
+		Assert.assertEquals(version + 1, updatedDepartment.getVersion());
 	}
 
 }

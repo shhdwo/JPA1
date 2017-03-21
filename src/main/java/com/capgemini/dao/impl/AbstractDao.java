@@ -14,7 +14,7 @@ import javax.transaction.Transactional;
 import com.capgemini.dao.Dao;
 
 @Transactional(Transactional.TxType.SUPPORTS)
-public abstract class AbstractDao<T, K extends Serializable> implements Dao<T, K> {
+public abstract class AbstractDao<T, K extends Serializable> implements Dao<T, K> { //TODO usunac na koniec?
 
     @PersistenceContext
     protected EntityManager entityManager;

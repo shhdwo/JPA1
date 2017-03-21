@@ -41,11 +41,17 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 	@Override
 	public DepartmentEntity add(DepartmentEntity department) {
-		if (null != departmentDao.findOne(department.getId())) {
-			throw new DepartmentIdAlreadyExistsException("Department with this ID already exists.");
+		Long departmentID = department.getId();
+		if (departmentID == null) {
+			return departmentDao.save(department);
 		}
 		else {
-			return departmentDao.save(department);
+			if (departmentDao.findOne(departmentID) != null) {
+				throw new DepartmentIdAlreadyExistsException("Department with this ID already exists.");
+			}
+			else {
+				return departmentDao.save(department);
+			}
 		}
 	}
 
@@ -55,8 +61,9 @@ public class DepartmentServiceImpl implements DepartmentService {
 	}
 
 	@Override
-	public void updateName(DepartmentEntity department) { //TODO nazwa w entity czy osobny argument?
-		departmentDao.updateName(department.getName(), department.getId());
+	public void updateName(DepartmentEntity department) {
+		DepartmentEntity foundDepartment = departmentDao.findOne(department.getId());
+		foundDepartment.setName(department.getName());
 	}
 
 }

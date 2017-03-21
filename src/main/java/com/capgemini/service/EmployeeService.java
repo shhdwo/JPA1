@@ -20,5 +20,7 @@ public interface EmployeeService {
 	public void update(EmployeeEntity employee);
 	
 	public void updateDepartment(EmployeeEntity employee, DepartmentEntity department);
+	
+	public List<EmployeeEntity> findByNameAndSurname(String name, String surname);
 
 }

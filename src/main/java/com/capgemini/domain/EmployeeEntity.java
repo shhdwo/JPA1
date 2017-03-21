@@ -1,11 +1,17 @@
 package com.capgemini.domain;
 
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -24,8 +30,19 @@ public class EmployeeEntity extends AbstractEntity {
 	@Column(nullable=false)
 	private Date birthdate;
 
-	@ManyToOne(cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY)
 	private DepartmentEntity department;
+	
+	@OneToMany(mappedBy="employee", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
+	private List<EmployeeProjectEntity> projectAssignment;
+	
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "email", column = @Column(name = "email")),
+		@AttributeOverride(name = "phone", column = @Column(name = "phone")),
+		@AttributeOverride(name = "mobile", column = @Column(name = "mobile"))
+	})
+	private ContactData contactData; 
 
 	public String getName() {
 		return name;
